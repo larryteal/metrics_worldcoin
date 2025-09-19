@@ -1,5 +1,9 @@
 name: Fetch Metrics of Worldcoin Daily
 
+# 关键：开启写权限，否则 GITHUB_TOKEN 默认是只读
+permissions:
+  contents: write
+
 on:
   schedule:
     - cron: '0 0 * * *' # 每天 UTC 0 点运行
@@ -11,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch metrics from worldcoin
         run: |
@@ -18,17 +24,13 @@ jobs:
           curl -s "https://metrics.worldcoin.org/" -o "$timestamp.json"
           echo "Fetched and saved to $timestamp.json"
 
-      - name: Set up authenticated git remote
-        run: |
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-
       - name: Commit and push new metrics file
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REF: ${{ github.ref }}
         run: |
+          timestamp=$(date -u +"%Y%m%dT%H%M%SZ")
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add *.json
           git commit -m "Add metrics for $timestamp UTC" || echo "Nothing to commit"
           git push origin HEAD:${GITHUB_REF##*/}
+        env:
+          GITHUB_REF: ${{ github.ref }}
