@@ -14,7 +14,7 @@ jobs:
 
       - name: Fetch metrics from worldcoin
         run: |
-          timestamp=$(date -u +"%Y%m%d%H%M%S")
+          timestamp=$(date -u +"%Y%m%dT%H%M%SZ")
           curl -s "https://metrics.worldcoin.org/" -o "$timestamp.json"
           echo "Fetched and saved to $timestamp.json"
 
